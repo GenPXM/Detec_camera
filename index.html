@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<title>Movement Detection</title>
+<head>
+</head>
+<script>
+  function sanitizing(str) {
+    return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+  }
+    const evtSource = new EventSource('/payload')
+
+    let receive_data
+    evtSource.onmessage = function(e) {
+      try {
+        let before_receive_data = receive_data
+        receive_data = JSON.parse(e.data)
+
+        if (JSON.stringify(before_receive_data) === JSON.stringify(receive_data)) {
+          return
+        }
+
+        let imgs_html = ''
+        for(key in receive_data){
+          // console.log(key, receive_data[key])
+          imgs_html += '<img width="20%" src="data:image/jpeg;base64,' + sanitizing(receive_data[key]) + '" />'
+        }
+
+        var imgs = document.getElementById("imgs")
+        imgs.innerHTML = imgs_html
+      }
+      catch{
+        console.log('json parse err')
+        return
+      }
+    }
+
+    // console.log(receive_data)
+
+  </script>
+  <body>
+    <h1>Movement Detection</h1>
+    <div id="imgs">
+    </div>
+  </body>
+</html>

@@ -1,7 +1,17 @@
 import numpy as np
 import cv2
+import os
+import time
+import base64
+import json
 import sys
 import smtplib
+
+save_dir = "./img/"
+
+if not os.path.isdir(save_dir):
+    os.makedirs(save_dir)
+max_image_number = 5
 
 TEXT_COLOR = (0, 255, 0)
 TRACKER_COLOR = (255, 0, 0)
@@ -56,8 +66,8 @@ def getBGSubtractor(BGS_TYPE):
 
 
 def main (args):
-    cap = cv2.VideoCapture('rtsp://centro.inovacao:Dvr!9Covid@192.168.23.34:8082/cam/realmonitor?channel=3&subtype=0')
-    cap2 = cv2.VideoCapture('rtsp://centro.inovacao:Dvr!9Covid@192.168.23.34:8082/cam/realmonitor?channel=5&subtype=0')
+    cap = cv2.VideoCapture(0)
+    cap2 = cv2.VideoCapture("input camera")
     minArea = 400
     bg_subtractor = getBGSubtractor(BGS_TYPE)
 
@@ -94,6 +104,30 @@ def main (args):
                 cv2.drawContours(frame, cnt, -1, (255, 255, 255), 1)
                 cv2.rectangle(frame, (x, y), (x+w, y+h), TRACKER_COLOR, 3)
                 cv2.rectangle(frame, (x, y), (x+w, y+h), (255, 255, 255), 1)
+                img_file_path = save_dir + str(time.time()) + ".jpg"
+                cv2.imwrite(img_file_path, frame)
+                img_list = os.listdir(save_dir)
+                img_list.sort()
+                if len(img_list) > max_image_number:
+                    # print("before", img_list)
+                    for i in range(0, len(img_list)):
+                        os.remove(save_dir + img_list[i])
+                        # print('path', save_dir + img_list[i])
+                        img_list.pop(0)
+                        # print("before222", img_list)
+                        if len(img_list) == max_image_number:
+                            break
+            imgs_data = {}
+            # print("bbb", img_list)
+            img_list.sort(reverse=True)
+            for v in img_list:
+                with open(save_dir + v, mode='rb') as f:
+                    imgs_data[v] = base64.b64encode(f.read()).decode("utf-8")
+            # print(imgs_data)
+
+            with open("imgs.json", "w") as f:
+                json.dump(imgs_data, f)
+            # time.sleep(1)
 
 
 
@@ -106,6 +140,30 @@ def main (args):
                 cv2.drawContours(frame1, cnt, -1, (255, 255, 255), 1)
                 cv2.rectangle(frame1, (x, y), (x + w, y + h), TRACKER_COLOR, 3)
                 cv2.rectangle(frame1, (x, y), (x + w, y + h), (255, 255, 255), 1)
+                img_file_path = save_dir + str(time.time()) + ".jpg"
+                cv2.imwrite(img_file_path, frame1)
+                img_list = os.listdir(save_dir)
+                img_list.sort()
+                if len(img_list) > max_image_number:
+                    # print("before", img_list)
+                    for i in range(0, len(img_list)):
+                        os.remove(save_dir + img_list[i])
+                        # print('path', save_dir + img_list[i])
+                        img_list.pop(0)
+                        # print("before222", img_list)
+                        if len(img_list) == max_image_number:
+                            break
+            imgs_data = {}
+            # print("bbb", img_list)
+            img_list.sort(reverse=True)
+            for v in img_list:
+                with open(save_dir + v, mode='rb') as f:
+                    imgs_data[v] = base64.b64encode(f.read()).decode("utf-8")
+            # print(imgs_data)
+
+            with open("imgs.json", "w") as f:
+                json.dump(imgs_data, f)
+            # time.sleep(1)
 
 
         result = cv2.bitwise_and(frame, frame, mask=bg_mask)
